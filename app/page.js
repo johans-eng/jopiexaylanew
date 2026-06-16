@@ -18,6 +18,12 @@ export default function Home() {
   const [yearsDays, setYearsDays] = useState("");
   const [showHeart, setShowHeart] = useState(false);
 
+  // preload image (FIX for tap-to-load issue)
+  useEffect(() => {
+    const img = new Image();
+    img.src = "/home-bg.png";
+  }, []);
+
   // clock
   useEffect(() => {
     const updateClock = () => {
@@ -32,23 +38,21 @@ export default function Home() {
     return () => clearInterval(i);
   }, []);
 
-  // ❤️ animated number (SLOW 8s)
+  // ❤️ animated number
   const animateNumber = (start, end, duration, setter) => {
     const startTime = performance.now();
 
     const step = (now) => {
       const progress = Math.min((now - startTime) / duration, 1);
 
-      // smoother slow finish (iOS-like)
       const eased = 1 - Math.pow(1 - progress, 5);
-
       const value = Math.floor(start + (end - start) * eased);
+
       setter(value);
 
       if (progress < 1) {
         requestAnimationFrame(step);
       } else {
-        // ❤️ heart trigger when finished
         setShowHeart(true);
         setTimeout(() => setShowHeart(false), 1400);
       }
@@ -57,7 +61,7 @@ export default function Home() {
     requestAnimationFrame(step);
   };
 
-  // ❤️ days together (8 second animation)
+  // ❤️ days together (8 seconds)
   useEffect(() => {
     const updateDays = () => {
       const now = new Date();
@@ -65,7 +69,6 @@ export default function Home() {
       const diffTime = now - startDate;
       const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-      // always start from 0 on load
       setDaysTogether(0);
       animateNumber(0, diffDays, 8000, setDaysTogether);
 
@@ -128,7 +131,7 @@ export default function Home() {
         overflow: "hidden",
       }}
     >
-      {/* background */}
+      {/* background image (GPU safe, no blur lag) */}
       <div
         style={{
           position: "absolute",
@@ -136,16 +139,16 @@ export default function Home() {
           backgroundImage: "url('/home-bg.png')",
           backgroundSize: "cover",
           backgroundPosition: "center",
+          transform: "scale(1.05)",
         }}
       />
 
-      {/* blur overlay */}
+      {/* safe dark overlay (NO backdrop-filter = no tap delay) */}
       <div
         style={{
           position: "absolute",
           inset: 0,
-          backdropFilter: "blur(18px)",
-          backgroundColor: "rgba(0,0,0,0.25)",
+          backgroundColor: "rgba(0,0,0,0.35)",
         }}
       />
 
