@@ -9,7 +9,6 @@ export default function Home() {
 
   const [leaving, setLeaving] = useState(false);
   const [translateY, setTranslateY] = useState(0);
-
   const [time, setTime] = useState("");
 
   // clock
@@ -35,27 +34,20 @@ export default function Home() {
     if (startY.current === null || leaving) return;
 
     const diff = startY.current - e.touches[0].clientY;
-
-    // only allow swipe up
-    if (diff > 0) {
-      setTranslateY(-diff);
-    }
+    if (diff > 0) setTranslateY(-diff);
   };
 
   const handleEnd = () => {
     if (leaving) return;
 
-    // threshold for unlock
     if (translateY < -120) {
       setLeaving(true);
-
       setTranslateY(-window.innerHeight);
 
       setTimeout(() => {
         router.push("/password");
       }, 250);
     } else {
-      // snap back
       setTranslateY(0);
     }
 
@@ -70,12 +62,23 @@ export default function Home() {
       style={{
         position: "fixed",
         inset: 0,
-        backgroundImage: "url('/home-bg.png')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
+        width: "100vw",
+        height: "100vh",
+        backgroundColor: "black", // 🔥 prevents white flash
         overflow: "hidden",
       }}
     >
+      {/* background image layer */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          backgroundImage: "url('/home-bg.png')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      />
+
       {/* blur overlay */}
       <div
         style={{
@@ -86,7 +89,7 @@ export default function Home() {
         }}
       />
 
-      {/* moving content */}
+      {/* content */}
       <div
         style={{
           position: "relative",
