@@ -1,83 +1,147 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { signInAnonymously } from "firebase/auth";
-import { auth, db } from "@/lib/firebase";
 import Link from "next/link";
 
-
 export default function Home() {
-  const [user, setUser] = useState(null);
+  const relationshipStart = new Date("2024-02-13");
+  const now = new Date();
 
-  useEffect(() => {
-    signInAnonymously(auth).then((res) => {
-      setUser(res.user);
-    });
-  }, []);
+  const diffMs = now - relationshipStart;
+  const totalDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  const years = Math.floor(totalDays / 365);
+  const remainingDays = totalDays % 365;
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <h1 style={styles.title}>❤️ Couple App</h1>
+    <div
+      style={{
+        minHeight: "100vh",
+        background:
+          "linear-gradient(135deg, #ff758c 0%, #ff7eb3 100%)",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        padding: 20,
+      }}
+    >
+      <div
+        style={{
+          background: "white",
+          borderRadius: 25,
+          padding: 40,
+          maxWidth: 500,
+          width: "100%",
+          textAlign: "center",
+          boxShadow: "0 15px 40px rgba(0,0,0,0.15)",
+        }}
+      >
+        <div style={{ fontSize: 70 }}>❤️</div>
 
-        {user && (
-          <p style={styles.subtitle}>
-            Your ID: {user.uid.slice(0, 10)}...
-          </p>
-        )}
+        <h1
+          style={{
+            marginTop: 10,
+            marginBottom: 5,
+            fontSize: 36,
+          }}
+        >
+          Jopie & Ayla
+        </h1>
 
-        <div style={styles.buttonContainer}>
-          <Link style={styles.button} href="/send">
-            💌 Send Love
-          </Link>
+        <p
+          style={{
+            color: "#666",
+            marginBottom: 30,
+          }}
+        >
+          Together since 13 February 2024
+        </p>
 
-          <Link href="/invite">🔐 Couple Setup</Link>
+        <div
+          style={{
+            background: "#fff0f4",
+            borderRadius: 20,
+            padding: 25,
+            marginBottom: 25,
+          }}
+        >
+          <div style={{ fontSize: 18, color: "#888" }}>
+            Together for
+          </div>
 
-          <Link style={styles.button} href="/messages">
-            📩 Messages
-          </Link>
+          <div
+            style={{
+              fontSize: 42,
+              fontWeight: "bold",
+              color: "#ff4d6d",
+              marginTop: 10,
+            }}
+          >
+            {totalDays}
+          </div>
+
+          <div style={{ fontSize: 20, color: "#555" }}>
+            days ❤️
+          </div>
+
+          <div
+            style={{
+              marginTop: 15,
+              color: "#777",
+            }}
+          >
+            {years} year{years !== 1 ? "s" : ""} & {remainingDays} days
+          </div>
+        </div>
+
+        {/* CHAT BUTTON */}
+        <Link href="/chat">
+          <button
+            style={{
+              width: "100%",
+              padding: "16px",
+              border: "none",
+              borderRadius: 15,
+              background: "#ff4d6d",
+              color: "white",
+              fontSize: 18,
+              fontWeight: "bold",
+              cursor: "pointer",
+              marginBottom: 12,
+            }}
+          >
+            💬 Open Chat
+          </button>
+        </Link>
+
+        {/* MEMORIES BUTTON */}
+        <Link href="/memories">
+          <button
+            style={{
+              width: "100%",
+              padding: "16px",
+              border: "none",
+              borderRadius: 15,
+              background: "#ff7eb3",
+              color: "white",
+              fontSize: 18,
+              fontWeight: "bold",
+              cursor: "pointer",
+            }}
+          >
+            📸 Memories
+          </button>
+        </Link>
+
+        <div
+          style={{
+            marginTop: 25,
+            color: "#999",
+            fontSize: 14,
+          }}
+        >
+          Every moment with you is my favorite ❤️
         </div>
       </div>
     </div>
   );
 }
-
-const styles = {
-  container: {
-    height: "100vh",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    background: "linear-gradient(135deg, #ff9a9e, #fad0c4)"
-  },
-  card: {
-    background: "white",
-    padding: 30,
-    borderRadius: 20,
-    textAlign: "center",
-    width: 300,
-    boxShadow: "0 10px 30px rgba(0,0,0,0.1)"
-  },
-  title: {
-    fontSize: 28,
-    marginBottom: 10
-  },
-  subtitle: {
-    fontSize: 12,
-    color: "gray"
-  },
-  buttonContainer: {
-    marginTop: 20,
-    display: "flex",
-    flexDirection: "column",
-    gap: 10
-  },
-  button: {
-    padding: 12,
-    borderRadius: 10,
-    background: "#ff4d6d",
-    color: "white",
-    textDecoration: "none",
-    textAlign: "center"
-  }
-};
