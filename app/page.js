@@ -12,10 +12,11 @@ export default function Home() {
 
   const [time, setTime] = useState("");
 
-  // ❤️ relationship counter
+  // ❤️ counter + heart
   const startDate = new Date("2024-02-13");
   const [daysTogether, setDaysTogether] = useState(0);
   const [yearsDays, setYearsDays] = useState("");
+  const [showHeart, setShowHeart] = useState(false);
 
   // clock
   useEffect(() => {
@@ -31,7 +32,31 @@ export default function Home() {
     return () => clearInterval(i);
   }, []);
 
-  // days together
+  // ❤️ animate number
+  const animateNumber = (start, end, duration, setter) => {
+    const startTime = performance.now();
+
+    const step = (now) => {
+      const progress = Math.min((now - startTime) / duration, 1);
+
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const value = Math.floor(start + (end - start) * eased);
+
+      setter(value);
+
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      } else {
+        // ❤️ trigger heart when finished
+        setShowHeart(true);
+        setTimeout(() => setShowHeart(false), 1200);
+      }
+    };
+
+    requestAnimationFrame(step);
+  };
+
+  // ❤️ days together (start from 0 every load)
   useEffect(() => {
     const updateDays = () => {
       const now = new Date();
@@ -39,7 +64,8 @@ export default function Home() {
       const diffTime = now - startDate;
       const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-      setDaysTogether(diffDays);
+      setDaysTogether(0);
+      animateNumber(0, diffDays, 1200, setDaysTogether);
 
       const years = Math.floor(diffDays / 365);
       const days = diffDays % 365;
@@ -52,8 +78,6 @@ export default function Home() {
     };
 
     updateDays();
-    const i = setInterval(updateDays, 60 * 1000);
-    return () => clearInterval(i);
   }, []);
 
   // swipe start
@@ -62,7 +86,7 @@ export default function Home() {
     startY.current = e.touches[0].clientY;
   };
 
-  // swipe move (drag feel)
+  // swipe move
   const handleMove = (e) => {
     if (startY.current === null || leaving) return;
 
@@ -98,11 +122,11 @@ export default function Home() {
         inset: 0,
         width: "100vw",
         height: "100vh",
-        backgroundColor: "black", // prevents white flash
+        backgroundColor: "black",
         overflow: "hidden",
       }}
     >
-      {/* background image */}
+      {/* background */}
       <div
         style={{
           position: "absolute",
@@ -123,7 +147,7 @@ export default function Home() {
         }}
       />
 
-      {/* moving content */}
+      {/* content */}
       <div
         style={{
           position: "relative",
@@ -138,12 +162,16 @@ export default function Home() {
         }}
       >
         {/* ❤️ COUNTER */}
-        <div style={{ textAlign: "center", marginBottom: 20 }}>
-          <div style={{ fontSize: 16, opacity: 0.9 }}>
-            Dagen samen: {daysTogether}
+        <div style={{ textAlign: "center", marginBottom: 25 }}>
+          <div style={{ fontSize: 18, opacity: 0.9, marginBottom: 8 }}>
+            Dagen samen
           </div>
 
-          <div style={{ fontSize: 14, opacity: 0.7 }}>
+          <div style={{ fontSize: 42, fontWeight: 600 }}>
+            {daysTogether}
+          </div>
+
+          <div style={{ fontSize: 14, opacity: 0.7, marginTop: 6 }}>
             {yearsDays}
           </div>
         </div>
@@ -168,6 +196,46 @@ export default function Home() {
           }}
         />
       </div>
+
+      {/* ❤️ HEART ANIMATION */}
+      {showHeart && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            pointerEvents: "none",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 999,
+          }}
+        >
+          <div
+            style={{
+              fontSize: 60,
+              animation: "heartFloat 1.2s ease-out forwards",
+            }}
+          >
+            ❤️
+          </div>
+
+          <style>{`
+            @keyframes heartFloat {
+              0% {
+                transform: scale(0.5) translateY(40px);
+                opacity: 0;
+              }
+              40% {
+                opacity: 1;
+              }
+              100% {
+                transform: scale(2.2) translateY(-120px);
+                opacity: 0;
+              }
+            }
+          `}</style>
+        </div>
+      )}
     </div>
   );
 }
