@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { db, auth } from "../../lib/firebase";
+import { auth, db } from "@/lib/firebase";
 import { collection, addDoc } from "firebase/firestore";
 
 export default function Send() {
