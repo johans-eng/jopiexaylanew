@@ -9,27 +9,60 @@ export default function Home() {
 
   const [leaving, setLeaving] = useState(false);
   const [translateY, setTranslateY] = useState(0);
+
   const [time, setTime] = useState("");
+
+  // ❤️ relationship counter
+  const startDate = new Date("2024-02-13");
+  const [daysTogether, setDaysTogether] = useState(0);
+  const [yearsDays, setYearsDays] = useState("");
 
   // clock
   useEffect(() => {
-    const update = () => {
+    const updateClock = () => {
       const now = new Date();
       const h = now.getHours().toString().padStart(2, "0");
       const m = now.getMinutes().toString().padStart(2, "0");
       setTime(`${h}:${m}`);
     };
 
-    update();
-    const i = setInterval(update, 1000);
+    updateClock();
+    const i = setInterval(updateClock, 1000);
     return () => clearInterval(i);
   }, []);
 
+  // days together
+  useEffect(() => {
+    const updateDays = () => {
+      const now = new Date();
+
+      const diffTime = now - startDate;
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+      setDaysTogether(diffDays);
+
+      const years = Math.floor(diffDays / 365);
+      const days = diffDays % 365;
+
+      if (years > 0) {
+        setYearsDays(`${years} jaar en ${days} dagen`);
+      } else {
+        setYearsDays(`${days} dagen`);
+      }
+    };
+
+    updateDays();
+    const i = setInterval(updateDays, 60 * 1000);
+    return () => clearInterval(i);
+  }, []);
+
+  // swipe start
   const handleStart = (e) => {
     if (leaving) return;
     startY.current = e.touches[0].clientY;
   };
 
+  // swipe move (drag feel)
   const handleMove = (e) => {
     if (startY.current === null || leaving) return;
 
@@ -37,6 +70,7 @@ export default function Home() {
     if (diff > 0) setTranslateY(-diff);
   };
 
+  // swipe end
   const handleEnd = () => {
     if (leaving) return;
 
@@ -64,11 +98,11 @@ export default function Home() {
         inset: 0,
         width: "100vw",
         height: "100vh",
-        backgroundColor: "black", // 🔥 prevents white flash
+        backgroundColor: "black", // prevents white flash
         overflow: "hidden",
       }}
     >
-      {/* background image layer */}
+      {/* background image */}
       <div
         style={{
           position: "absolute",
@@ -89,7 +123,7 @@ export default function Home() {
         }}
       />
 
-      {/* content */}
+      {/* moving content */}
       <div
         style={{
           position: "relative",
@@ -103,12 +137,25 @@ export default function Home() {
           color: "white",
         }}
       >
+        {/* ❤️ COUNTER */}
+        <div style={{ textAlign: "center", marginBottom: 20 }}>
+          <div style={{ fontSize: 16, opacity: 0.9 }}>
+            Dagen samen: {daysTogether}
+          </div>
+
+          <div style={{ fontSize: 14, opacity: 0.7 }}>
+            {yearsDays}
+          </div>
+        </div>
+
+        {/* CLOCK */}
         <div style={{ fontSize: 80, fontWeight: 300 }}>{time}</div>
 
         <div style={{ opacity: 0.8, marginTop: 10 }}>
           Swipe up to unlock
         </div>
 
+        {/* swipe bar */}
         <div
           style={{
             position: "absolute",
