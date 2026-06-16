@@ -2,16 +2,14 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { motion, useAnimation } from "framer-motion";
 
 export default function Home() {
   const router = useRouter();
-  const controls = useAnimation();
   const startY = useRef(null);
-
+  const [leaving, setLeaving] = useState(false);
   const [time, setTime] = useState("");
 
-  // live clock
+  // clock
   useEffect(() => {
     const update = () => {
       const now = new Date();
@@ -21,8 +19,8 @@ export default function Home() {
     };
 
     update();
-    const interval = setInterval(update, 1000);
-    return () => clearInterval(interval);
+    const i = setInterval(update, 1000);
+    return () => clearInterval(i);
   }, []);
 
   const handleStart = (e) => {
@@ -30,28 +28,24 @@ export default function Home() {
   };
 
   const handleEnd = async (e) => {
-    if (startY.current === null) return;
+    if (startY.current === null || leaving) return;
 
-    const endY = e.changedTouches[0].clientY;
-    const diff = startY.current - endY;
+    const diff = startY.current - e.changedTouches[0].clientY;
 
-    // swipe UP (iPhone unlock style)
     if (diff > 80) {
-      await controls.start({
-        y: "-100%",
-        opacity: 0,
-        transition: { duration: 0.5 },
-      });
+      setLeaving(true);
 
-      router.push("/password");
+      // small delay prevents white flash
+      setTimeout(() => {
+        router.push("/password");
+      }, 180);
     }
 
     startY.current = null;
   };
 
   return (
-    <motion.div
-      animate={controls}
+    <div
       onTouchStart={handleStart}
       onTouchEnd={handleEnd}
       style={{
@@ -63,7 +57,7 @@ export default function Home() {
         overflow: "hidden",
       }}
     >
-      {/* blur overlay like iPhone */}
+      {/* blur overlay */}
       <div
         style={{
           position: "absolute",
@@ -73,7 +67,19 @@ export default function Home() {
         }}
       />
 
-      {/* clock */}
+      {/* fade out layer during swipe */}
+      {leaving && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            backgroundColor: "black",
+            opacity: 0.4,
+          }}
+        />
+      )}
+
+      {/* content */}
       <div
         style={{
           position: "relative",
@@ -83,16 +89,11 @@ export default function Home() {
           justifyContent: "center",
           alignItems: "center",
           color: "white",
-          textAlign: "center",
         }}
       >
-        <div style={{ fontSize: 80, fontWeight: "300" }}>{time}</div>
+        <div style={{ fontSize: 80, fontWeight: 300 }}>{time}</div>
+        <div style={{ opacity: 0.8 }}>Swipe up to unlock</div>
 
-        <div style={{ fontSize: 16, opacity: 0.8, marginTop: 10 }}>
-          Swipe up to unlock
-        </div>
-
-        {/* little swipe indicator */}
         <div
           style={{
             position: "absolute",
@@ -105,6 +106,6 @@ export default function Home() {
           }}
         />
       </div>
-    </motion.div>
+    </div>
   );
 }

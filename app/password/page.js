@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export default function PasswordPage() {
@@ -8,6 +8,12 @@ export default function PasswordPage() {
   const router = useRouter();
 
   const correctPassword = "13-02-2024";
+
+  // preload background instantly (prevents flash)
+  useEffect(() => {
+    const img = new Image();
+    img.src = "/home-bg.png";
+  }, []);
 
   const handleSubmit = () => {
     if (input === correctPassword) {
@@ -25,13 +31,9 @@ export default function PasswordPage() {
         backgroundImage: "url('/home-bg.png')",
         backgroundSize: "cover",
         backgroundPosition: "center",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        alignItems: "center",
       }}
     >
-      {/* dark overlay (NOT blur) */}
+      {/* dark overlay only */}
       <div
         style={{
           position: "absolute",
@@ -44,24 +46,27 @@ export default function PasswordPage() {
       <div
         style={{
           position: "relative",
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
           color: "white",
-          textAlign: "center",
-          zIndex: 2,
         }}
       >
-        <h1 style={{ fontSize: 28, fontWeight: 400 }}>Datum?</h1>
+        <div style={{ fontSize: 26 }}>Datum?</div>
 
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="DD-MM-YYYY"
+          placeholder="13-02-2024"
           style={{
             marginTop: 20,
             padding: 12,
             fontSize: 18,
             borderRadius: 10,
-            border: "none",
             textAlign: "center",
+            border: "none",
             outline: "none",
           }}
         />
@@ -72,10 +77,8 @@ export default function PasswordPage() {
             marginTop: 15,
             padding: "10px 20px",
             borderRadius: 10,
-            border: "none",
             background: "white",
-            color: "black",
-            fontWeight: 500,
+            border: "none",
           }}
         >
           Unlock
