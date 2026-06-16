@@ -7,18 +7,24 @@ import { signInAnonymously } from "firebase/auth";
 import {
   collection,
   addDoc,
+  doc,
   onSnapshot,
   query,
-  orderBy
+  orderBy,
+  setDoc,
 } from "firebase/firestore";
 
-import { requestNotificationPermission } from "@/lib/firebase-messaging";
+import {
+  requestNotificationPermission,
+  subscribeToForegroundMessages,
+} from "@/lib/firebase-messaging";
 
 export default function Memories() {
   const [user, setUser] = useState(null);
   const [photos, setPhotos] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
   const [notification, setNotification] = useState(null);
+  const [pushStatus, setPushStatus] = useState("default");
   const latestCreatedAtRef = useRef(null);
 
   useEffect(() => {
@@ -28,22 +34,52 @@ export default function Memories() {
   }, []);
 
   useEffect(() => {
+    if (typeof window === "undefined" || !("Notification" in window)) return;
+    setPushStatus(Notification.permission);
+  }, []);
+
+  const enablePushNotifications = async () => {
     if (!user) return;
 
-    const setup = async () => {
+    try {
       const token = await requestNotificationPermission();
 
       if (token) {
-        console.log("FCM token:", token);
-
-        await addDoc(collection(db, "tokens"), {
-          token,
-          user: user.uid,
-        });
+        await setDoc(
+          doc(db, "tokens", user.uid),
+          { token, user: user.uid },
+          { merge: true }
+        );
+        setPushStatus("granted");
+        console.log("FCM token saved");
+      } else {
+        setPushStatus(Notification.permission);
       }
-    };
+    } catch (err) {
+      console.error("Push setup failed:", err);
+    }
+  };
 
-    setup();
+  useEffect(() => {
+    if (!user || Notification.permission !== "granted") return;
+    enablePushNotifications();
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    let unsubscribe = () => {};
+
+    subscribeToForegroundMessages((payload) => {
+      setNotification(
+        payload.notification?.title || "📸 New memory added ❤️"
+      );
+      setTimeout(() => setNotification(null), 3000);
+    }).then((unsub) => {
+      unsubscribe = unsub;
+    });
+
+    return () => unsubscribe();
   }, [user]);
 
   useEffect(() => {
@@ -149,6 +185,26 @@ export default function Memories() {
       <p style={{ color: "#666", marginBottom: 15 }}>
         Our shared moments ❤️
       </p>
+
+      {pushStatus !== "granted" && (
+        <button
+          onClick={enablePushNotifications}
+          style={{
+            marginBottom: 15,
+            padding: "10px 16px",
+            borderRadius: 10,
+            border: "none",
+            background: "#ff4d6d",
+            color: "white",
+            cursor: "pointer",
+            fontWeight: "bold",
+          }}
+        >
+          {pushStatus === "denied"
+            ? "Notifications blocked — enable in browser settings"
+            : "Enable notifications 🔔"}
+        </button>
+      )}
 
       {/* UPLOAD */}
       <input

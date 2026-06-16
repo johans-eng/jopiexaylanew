@@ -5,20 +5,22 @@ admin.initializeApp();
 
 exports.sendMemoryNotification = functions.firestore
   .document("memories/{id}")
-  .onCreate(async (snap, context) => {
+  .onCreate(async (snap) => {
     const data = snap.data();
+    const senderId = data.sender;
 
     const tokensSnap = await admin.firestore().collection("tokens").get();
+    const tokens = tokensSnap.docs
+      .filter((doc) => doc.id !== senderId && doc.data().token)
+      .map((doc) => doc.data().token);
 
-    const tokens = tokensSnap.docs.map(doc => doc.data().token);
+    if (tokens.length === 0) return;
 
-    const message = {
+    return admin.messaging().sendEachForMulticast({
       notification: {
         title: "📸 New Memory!",
-        body: "Someone added a new photo ❤️"
+        body: "Someone added a new photo ❤️",
       },
-      tokens: tokens
-    };
-
-    return admin.messaging().sendMulticast(message);
+      tokens,
+    });
   });

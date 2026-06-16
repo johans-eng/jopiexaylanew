@@ -21,7 +21,29 @@ exports.sendPush = functions.firestore
       token,
       notification: {
         title: "❤️ New message",
-        body: data.text
-      }
+        body: data.text,
+      },
+    });
+  });
+
+exports.sendMemoryNotification = functions.firestore
+  .document("memories/{id}")
+  .onCreate(async (snap) => {
+    const data = snap.data();
+    const senderId = data.sender;
+
+    const tokensSnap = await admin.firestore().collection("tokens").get();
+    const tokens = tokensSnap.docs
+      .filter((doc) => doc.id !== senderId && doc.data().token)
+      .map((doc) => doc.data().token);
+
+    if (tokens.length === 0) return;
+
+    return admin.messaging().sendEachForMulticast({
+      notification: {
+        title: "📸 New Memory!",
+        body: "Someone added a new photo ❤️",
+      },
+      tokens,
     });
   });
