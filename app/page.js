@@ -32,31 +32,32 @@ export default function Home() {
     return () => clearInterval(i);
   }, []);
 
-  // ❤️ animate number
+  // ❤️ animated number (SLOW 8s)
   const animateNumber = (start, end, duration, setter) => {
     const startTime = performance.now();
 
     const step = (now) => {
       const progress = Math.min((now - startTime) / duration, 1);
 
-      const eased = 1 - Math.pow(1 - progress, 3);
-      const value = Math.floor(start + (end - start) * eased);
+      // smoother slow finish (iOS-like)
+      const eased = 1 - Math.pow(1 - progress, 5);
 
+      const value = Math.floor(start + (end - start) * eased);
       setter(value);
 
       if (progress < 1) {
         requestAnimationFrame(step);
       } else {
-        // ❤️ trigger heart when finished
+        // ❤️ heart trigger when finished
         setShowHeart(true);
-        setTimeout(() => setShowHeart(false), 1200);
+        setTimeout(() => setShowHeart(false), 1400);
       }
     };
 
     requestAnimationFrame(step);
   };
 
-  // ❤️ days together (start from 0 every load)
+  // ❤️ days together (8 second animation)
   useEffect(() => {
     const updateDays = () => {
       const now = new Date();
@@ -64,8 +65,9 @@ export default function Home() {
       const diffTime = now - startDate;
       const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
+      // always start from 0 on load
       setDaysTogether(0);
-      animateNumber(0, diffDays, 1200, setDaysTogether);
+      animateNumber(0, diffDays, 8000, setDaysTogether);
 
       const years = Math.floor(diffDays / 365);
       const days = diffDays % 365;
@@ -213,7 +215,7 @@ export default function Home() {
           <div
             style={{
               fontSize: 60,
-              animation: "heartFloat 1.2s ease-out forwards",
+              animation: "heartFloat 1.4s ease-out forwards",
             }}
           >
             ❤️
