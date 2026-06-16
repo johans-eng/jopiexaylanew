@@ -12,9 +12,7 @@ import {
   orderBy,
 } from "firebase/firestore";
 
-import {
-  subscribeToForegroundMessages,
-} from "@/lib/firebase-messaging";
+import { subscribeToForegroundMessages } from "@/lib/firebase-messaging";
 
 export default function Memories() {
   const [user, setUser] = useState(null);
@@ -24,12 +22,10 @@ export default function Memories() {
 
   const latestCreatedAtRef = useRef(null);
 
-  // auth
   useEffect(() => {
     signInAnonymously(auth).then((res) => setUser(res.user));
   }, []);
 
-  // notifications
   useEffect(() => {
     if (!user) return;
 
@@ -43,17 +39,13 @@ export default function Memories() {
     return () => unsub();
   }, [user]);
 
-  // firestore listener
   useEffect(() => {
     if (!user) return;
 
     const q = query(collection(db, "memories"), orderBy("createdAt", "desc"));
 
     const unsub = onSnapshot(q, (snap) => {
-      const data = snap.docs.map((d) => ({
-        id: d.id,
-        ...d.data(),
-      }));
+      const data = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 
       const newest = data[0]?.createdAt;
 
@@ -72,7 +64,6 @@ export default function Memories() {
     return () => unsub();
   }, [user]);
 
-  // upload
   const uploadImage = async (e) => {
     const file = e.target.files[0];
     if (!file || !user) return;
@@ -106,24 +97,13 @@ export default function Memories() {
         width: "100vw",
         height: "100vh",
         overflow: "hidden",
-        background: "#0b0b0f",
+        background: "#000",
         display: "flex",
         flexDirection: "column",
         color: "white",
       }}
     >
-      {/* BACKGROUND */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background:
-            "linear-gradient(180deg, #0b0b0f 0%, #141421 100%)",
-          zIndex: 0,
-        }}
-      />
-
-      {/* NOTIFICATION */}
+      {/* notification */}
       {notification && (
         <div
           style={{
@@ -142,7 +122,7 @@ export default function Memories() {
         </div>
       )}
 
-      {/* HEADER */}
+      {/* header */}
       <div
         style={{
           position: "relative",
@@ -154,8 +134,8 @@ export default function Memories() {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          background: "rgba(255,255,255,0.06)",
-          backdropFilter: "blur(12px)",
+          background: "rgba(255,255,255,0.05)",
+          backdropFilter: "blur(10px)",
         }}
       >
         <Link href="/">
@@ -176,7 +156,7 @@ export default function Memories() {
         <div />
       </div>
 
-      {/* GRID (ONLY SCROLL AREA) */}
+      {/* GRID */}
       <div
         style={{
           position: "relative",
@@ -217,7 +197,7 @@ export default function Memories() {
         ))}
       </div>
 
-      {/* FLOATING UPLOAD BUTTON */}
+      {/* FLOATING UPLOAD */}
       <label
         style={{
           position: "fixed",
@@ -230,7 +210,7 @@ export default function Memories() {
           borderRadius: 999,
           fontWeight: 600,
           cursor: "pointer",
-          boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
+          boxShadow: "0 10px 30px rgba(0,0,0,0.4)",
           zIndex: 9999,
         }}
       >
@@ -243,14 +223,14 @@ export default function Memories() {
         />
       </label>
 
-      {/* FULLSCREEN VIEW */}
+      {/* FULLSCREEN */}
       {selectedImage && (
         <div
           onClick={() => setSelectedImage(null)}
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(0,0,0,0.95)",
+            background: "#000",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
