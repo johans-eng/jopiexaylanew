@@ -6,7 +6,10 @@ import { useRouter } from "next/navigation";
 export default function Home() {
   const router = useRouter();
   const startY = useRef(null);
+
   const [leaving, setLeaving] = useState(false);
+  const [translateY, setTranslateY] = useState(0);
+
   const [time, setTime] = useState("");
 
   // clock
@@ -24,21 +27,36 @@ export default function Home() {
   }, []);
 
   const handleStart = (e) => {
+    if (leaving) return;
     startY.current = e.touches[0].clientY;
   };
 
-  const handleEnd = async (e) => {
+  const handleMove = (e) => {
     if (startY.current === null || leaving) return;
 
-    const diff = startY.current - e.changedTouches[0].clientY;
+    const diff = startY.current - e.touches[0].clientY;
 
-    if (diff > 80) {
+    // only allow swipe up
+    if (diff > 0) {
+      setTranslateY(-diff);
+    }
+  };
+
+  const handleEnd = () => {
+    if (leaving) return;
+
+    // threshold for unlock
+    if (translateY < -120) {
       setLeaving(true);
 
-      // small delay prevents white flash
+      setTranslateY(-window.innerHeight);
+
       setTimeout(() => {
         router.push("/password");
-      }, 180);
+      }, 250);
+    } else {
+      // snap back
+      setTranslateY(0);
     }
 
     startY.current = null;
@@ -47,6 +65,7 @@ export default function Home() {
   return (
     <div
       onTouchStart={handleStart}
+      onTouchMove={handleMove}
       onTouchEnd={handleEnd}
       style={{
         position: "fixed",
@@ -67,23 +86,13 @@ export default function Home() {
         }}
       />
 
-      {/* fade out layer during swipe */}
-      {leaving && (
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            backgroundColor: "black",
-            opacity: 0.4,
-          }}
-        />
-      )}
-
-      {/* content */}
+      {/* moving content */}
       <div
         style={{
           position: "relative",
           height: "100%",
+          transform: `translateY(${translateY}px)`,
+          transition: leaving ? "transform 0.25s ease-out" : "none",
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
@@ -92,7 +101,10 @@ export default function Home() {
         }}
       >
         <div style={{ fontSize: 80, fontWeight: 300 }}>{time}</div>
-        <div style={{ opacity: 0.8 }}>Swipe up to unlock</div>
+
+        <div style={{ opacity: 0.8, marginTop: 10 }}>
+          Swipe up to unlock
+        </div>
 
         <div
           style={{
