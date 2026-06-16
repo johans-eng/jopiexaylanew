@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { signInAnonymously } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 import Link from "next/link";
+
 
 export default function Home() {
   const [user, setUser] = useState(null);
