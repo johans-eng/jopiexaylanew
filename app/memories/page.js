@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { auth, db } from "@/lib/firebase";
 import { signInAnonymously } from "firebase/auth";
@@ -19,6 +19,7 @@ export default function Memories() {
   const [photos, setPhotos] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
   const [notification, setNotification] = useState(null);
+  const latestCreatedAtRef = useRef(null);
 
   useEffect(() => {
     signInAnonymously(auth).then((res) => {
@@ -27,6 +28,8 @@ export default function Memories() {
   }, []);
 
   useEffect(() => {
+    if (!user) return;
+
     const setup = async () => {
       const token = await requestNotificationPermission();
 
@@ -35,40 +38,49 @@ export default function Memories() {
 
         await addDoc(collection(db, "tokens"), {
           token,
-          user: auth.currentUser?.uid,
+          user: user.uid,
         });
       }
     };
 
     setup();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
+    if (!user) return;
+
     const q = query(
       collection(db, "memories"),
       orderBy("createdAt", "desc")
     );
 
-    const unsub = onSnapshot(q, (snap) => {
-      const data = snap.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        const data = snap.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
 
-      // detect new upload
-      if (photos.length > 0 && data[0]?.createdAt !== photos[0]?.createdAt) {
-        setNotification("📸 New memory added ❤️");
+        const newestCreatedAt = data[0]?.createdAt;
+        if (
+          latestCreatedAtRef.current !== null &&
+          newestCreatedAt !== latestCreatedAtRef.current
+        ) {
+          setNotification("📸 New memory added ❤️");
+          setTimeout(() => setNotification(null), 3000);
+        }
+        latestCreatedAtRef.current = newestCreatedAt;
 
-        setTimeout(() => {
-          setNotification(null);
-        }, 3000);
+        setPhotos(data);
+      },
+      (err) => {
+        console.error("Memories listener error:", err);
       }
-
-      setPhotos(data);
-    });
+    );
 
     return () => unsub();
-  }, [photos]);
+  }, [user]);
 
   const uploadImage = async (e) => {
     const file = e.target.files[0];
