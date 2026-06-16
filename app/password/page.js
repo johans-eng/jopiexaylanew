@@ -9,7 +9,7 @@ export default function PasswordPage() {
 
   const correctPassword = "13-02-2024";
 
-  // preload image to prevent flash
+  // preload image (prevents jump)
   useEffect(() => {
     const img = new Image();
     img.src = "/home-bg.png";
@@ -30,11 +30,11 @@ export default function PasswordPage() {
         inset: 0,
         width: "100vw",
         height: "100vh",
-        backgroundColor: "black", // 🔥 removes white top block
+        backgroundColor: "black",
         overflow: "hidden",
       }}
     >
-      {/* background image layer */}
+      {/* SAME background structure as home */}
       <div
         style={{
           position: "absolute",
@@ -42,10 +42,11 @@ export default function PasswordPage() {
           backgroundImage: "url('/home-bg.png')",
           backgroundSize: "cover",
           backgroundPosition: "center",
+          transform: "scale(1.05)", // 🔥 matches home EXACTLY
         }}
       />
 
-      {/* dark overlay */}
+      {/* same dark overlay style */}
       <div
         style={{
           position: "absolute",
