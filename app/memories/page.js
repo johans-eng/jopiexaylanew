@@ -7,15 +7,12 @@ import { signInAnonymously } from "firebase/auth";
 import {
   collection,
   addDoc,
-  doc,
   onSnapshot,
   query,
   orderBy,
-  setDoc,
 } from "firebase/firestore";
 
 import {
-  requestNotificationPermission,
   subscribeToForegroundMessages,
 } from "@/lib/firebase-messaging";
 
@@ -27,32 +24,36 @@ export default function Memories() {
 
   const latestCreatedAtRef = useRef(null);
 
+  // auth
   useEffect(() => {
     signInAnonymously(auth).then((res) => setUser(res.user));
   }, []);
 
+  // notifications
   useEffect(() => {
     if (!user) return;
 
-    let unsubMsg = () => {};
+    let unsub = () => {};
 
     subscribeToForegroundMessages((payload) => {
-      setNotification(
-        payload.notification?.title || "📸 New memory ❤️"
-      );
+      setNotification(payload.notification?.title || "📸 New memory ❤️");
       setTimeout(() => setNotification(null), 3000);
-    }).then((unsub) => (unsubMsg = unsub));
+    }).then((u) => (unsub = u));
 
-    return () => unsubMsg();
+    return () => unsub();
   }, [user]);
 
+  // firestore listener
   useEffect(() => {
     if (!user) return;
 
     const q = query(collection(db, "memories"), orderBy("createdAt", "desc"));
 
     const unsub = onSnapshot(q, (snap) => {
-      const data = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      const data = snap.docs.map((d) => ({
+        id: d.id,
+        ...d.data(),
+      }));
 
       const newest = data[0]?.createdAt;
 
@@ -71,6 +72,7 @@ export default function Memories() {
     return () => unsub();
   }, [user]);
 
+  // upload
   const uploadImage = async (e) => {
     const file = e.target.files[0];
     if (!file || !user) return;
@@ -104,12 +106,24 @@ export default function Memories() {
         width: "100vw",
         height: "100vh",
         overflow: "hidden",
-        background:
-          "linear-gradient(180deg, #0b0b0f 0%, #141421 100%)",
+        background: "#0b0b0f",
+        display: "flex",
+        flexDirection: "column",
         color: "white",
       }}
     >
-      {/* notification */}
+      {/* BACKGROUND */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background:
+            "linear-gradient(180deg, #0b0b0f 0%, #141421 100%)",
+          zIndex: 0,
+        }}
+      />
+
+      {/* NOTIFICATION */}
       {notification && (
         <div
           style={{
@@ -128,13 +142,18 @@ export default function Memories() {
         </div>
       )}
 
-      {/* header */}
+      {/* HEADER */}
       <div
         style={{
+          position: "relative",
+          zIndex: 10,
+          paddingTop: "calc(12px + env(safe-area-inset-top))",
+          paddingBottom: 12,
+          paddingLeft: 16,
+          paddingRight: 16,
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          padding: "14px 16px",
           background: "rgba(255,255,255,0.06)",
           backdropFilter: "blur(12px)",
         }}
@@ -157,20 +176,20 @@ export default function Memories() {
         <div />
       </div>
 
-      {/* GRID */}
+      {/* GRID (ONLY SCROLL AREA) */}
       <div
         style={{
-          position: "absolute",
-          top: 80,
-          bottom: 0,
-          left: 0,
-          right: 0,
-          padding: 12,
+          position: "relative",
+          zIndex: 1,
+          flex: 1,
           overflowY: "auto",
+          padding: 12,
           display: "grid",
           gridTemplateColumns:
             "repeat(auto-fill, minmax(140px, 1fr))",
           gap: 10,
+          paddingBottom: 120,
+          WebkitOverflowScrolling: "touch",
         }}
       >
         {photos.map((p) => (
@@ -198,7 +217,7 @@ export default function Memories() {
         ))}
       </div>
 
-      {/* 📌 FLOATING UPLOAD BUTTON */}
+      {/* FLOATING UPLOAD BUTTON */}
       <label
         style={{
           position: "fixed",
@@ -224,7 +243,7 @@ export default function Memories() {
         />
       </label>
 
-      {/* FULLSCREEN VIEWER */}
+      {/* FULLSCREEN VIEW */}
       {selectedImage && (
         <div
           onClick={() => setSelectedImage(null)}
