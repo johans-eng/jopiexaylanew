@@ -4,24 +4,74 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export default function PasswordPage() {
-  const [input, setInput] = useState("");
   const router = useRouter();
 
-  const correctPassword = "13-02-2024";
+  const correctPin = "13022024";
 
-  // preload image (prevents jump)
+  const [pin, setPin] = useState("");
+  const [showHeart, setShowHeart] = useState(false);
+  const [fadeOut, setFadeOut] = useState(false);
+  const [shake, setShake] = useState(false);
+
   useEffect(() => {
     const img = new Image();
     img.src = "/home-bg.png";
   }, []);
 
-  const handleSubmit = () => {
-    if (input === correctPassword) {
-      router.push("/memories");
-    } else {
-      alert("Wrong");
+  const addDigit = (digit) => {
+    if (pin.length >= 8 || showHeart) return;
+
+    const newPin = pin + digit;
+    setPin(newPin);
+
+    if (newPin.length === 8) {
+      setTimeout(() => {
+        if (newPin === correctPin) {
+          setShowHeart(true);
+
+          setTimeout(() => {
+            setFadeOut(true);
+          }, 900);
+
+          setTimeout(() => {
+            router.push("/memories");
+          }, 1500);
+        } else {
+          setShake(true);
+
+          setTimeout(() => {
+            setShake(false);
+            setPin("");
+          }, 500);
+        }
+      }, 150);
     }
   };
+
+  const removeDigit = () => {
+    if (showHeart) return;
+    setPin((prev) => prev.slice(0, -1));
+  };
+
+  const Key = ({ number }) => (
+    <button
+      onClick={() => addDigit(number)}
+      style={{
+        width: 78,
+        height: 78,
+        borderRadius: "50%",
+        border: "none",
+        background: "rgba(255,255,255,0.15)",
+        color: "white",
+        fontSize: 32,
+        fontWeight: 300,
+        cursor: "pointer",
+        backdropFilter: "blur(8px)",
+      }}
+    >
+      {number}
+    </button>
+  );
 
   return (
     <div
@@ -32,9 +82,11 @@ export default function PasswordPage() {
         height: "100vh",
         backgroundColor: "black",
         overflow: "hidden",
+        opacity: fadeOut ? 0 : 1,
+        transition: "opacity .6s ease",
       }}
     >
-      {/* SAME background structure as home */}
+      {/* background */}
       <div
         style={{
           position: "absolute",
@@ -42,11 +94,11 @@ export default function PasswordPage() {
           backgroundImage: "url('/home-bg.png')",
           backgroundSize: "cover",
           backgroundPosition: "center",
-          transform: "scale(1.05)", // 🔥 matches home EXACTLY
+          transform: "scale(1.05)",
         }}
       />
 
-      {/* same dark overlay style */}
+      {/* overlay */}
       <div
         style={{
           position: "absolute",
@@ -67,36 +119,141 @@ export default function PasswordPage() {
           color: "white",
         }}
       >
-        <div style={{ fontSize: 26 }}>Datum?</div>
-
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="13-02-2024"
+        <div
           style={{
-            marginTop: 20,
-            padding: 12,
-            fontSize: 18,
-            borderRadius: 10,
-            textAlign: "center",
-            border: "none",
-            outline: "none",
-          }}
-        />
-
-        <button
-          onClick={handleSubmit}
-          style={{
-            marginTop: 15,
-            padding: "10px 20px",
-            borderRadius: 10,
-            background: "white",
-            border: "none",
+            fontSize: 30,
+            fontWeight: 300,
+            marginBottom: 30,
           }}
         >
-          Unlock
-        </button>
+          Datum?
+        </div>
+
+        {/* PIN dots */}
+        <div
+          style={{
+            display: "flex",
+            gap: 12,
+            marginBottom: 40,
+            animation: shake ? "shake .45s ease" : "none",
+          }}
+        >
+          {[...Array(8)].map((_, i) => (
+            <div
+              key={i}
+              style={{
+                width: 16,
+                height: 16,
+                borderRadius: "50%",
+                background:
+                  i < pin.length
+                    ? "white"
+                    : "rgba(255,255,255,0.25)",
+              }}
+            />
+          ))}
+        </div>
+
+        {/* keypad */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, 78px)",
+            gap: 16,
+          }}
+        >
+          <Key number="1" />
+          <Key number="2" />
+          <Key number="3" />
+
+          <Key number="4" />
+          <Key number="5" />
+          <Key number="6" />
+
+          <Key number="7" />
+          <Key number="8" />
+          <Key number="9" />
+
+          <div />
+
+          <Key number="0" />
+
+          <button
+            onClick={removeDigit}
+            style={{
+              width: 78,
+              height: 78,
+              borderRadius: "50%",
+              border: "none",
+              background: "rgba(255,255,255,0.15)",
+              color: "white",
+              fontSize: 24,
+              cursor: "pointer",
+            }}
+          >
+            ⌫
+          </button>
+        </div>
       </div>
+
+      {/* heart unlock animation */}
+      {showHeart && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            pointerEvents: "none",
+            zIndex: 9999,
+          }}
+        >
+          <div
+            style={{
+              fontSize: 90,
+              animation: "unlockHeart 1.5s ease-out forwards",
+            }}
+          >
+            ❤️
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes unlockHeart {
+          0% {
+            opacity: 0;
+            transform: scale(0.2);
+          }
+
+          30% {
+            opacity: 1;
+            transform: scale(1);
+          }
+
+          70% {
+            opacity: 1;
+            transform: scale(2.5);
+            filter: drop-shadow(0 0 30px rgba(255,255,255,.8));
+          }
+
+          100% {
+            opacity: 0;
+            transform: scale(4);
+            filter: drop-shadow(0 0 60px rgba(255,255,255,1));
+          }
+        }
+
+        @keyframes shake {
+          0% { transform: translateX(0); }
+          20% { transform: translateX(-8px); }
+          40% { transform: translateX(8px); }
+          60% { transform: translateX(-8px); }
+          80% { transform: translateX(8px); }
+          100% { transform: translateX(0); }
+        }
+      `}</style>
     </div>
   );
 }
