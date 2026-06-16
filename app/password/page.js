@@ -4,59 +4,83 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function PasswordPage() {
-  const [password, setPassword] = useState("");
+  const [input, setInput] = useState("");
   const router = useRouter();
 
-  const correctPassword = "13022024"; // change this
+  const correctPassword = "13-02-2024";
 
   const handleSubmit = () => {
-    if (password === correctPassword) {
+    if (input === correctPassword) {
       router.push("/memories");
     } else {
-      alert("Wrong password");
+      alert("Wrong");
     }
   };
 
   return (
     <div
       style={{
-        height: "100vh",
+        position: "fixed",
+        inset: 0,
+        backgroundImage: "url('/home-bg.png')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: "#111",
-        color: "white",
       }}
     >
-      <h2>Enter Password</h2>
-
-      <input
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
+      {/* dark overlay (NOT blur) */}
+      <div
         style={{
-          padding: 12,
-          fontSize: 18,
-          marginTop: 20,
-          borderRadius: 8,
-          border: "none",
+          position: "absolute",
+          inset: 0,
+          backgroundColor: "rgba(0,0,0,0.35)",
         }}
       />
 
-      <button
-        onClick={handleSubmit}
+      {/* content */}
+      <div
         style={{
-          marginTop: 20,
-          padding: "10px 20px",
-          borderRadius: 8,
-          backgroundColor: "white",
-          color: "black",
-          border: "none",
+          position: "relative",
+          color: "white",
+          textAlign: "center",
+          zIndex: 2,
         }}
       >
-        Unlock
-      </button>
+        <h1 style={{ fontSize: 28, fontWeight: 400 }}>Datum?</h1>
+
+        <input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="DD-MM-YYYY"
+          style={{
+            marginTop: 20,
+            padding: 12,
+            fontSize: 18,
+            borderRadius: 10,
+            border: "none",
+            textAlign: "center",
+            outline: "none",
+          }}
+        />
+
+        <button
+          onClick={handleSubmit}
+          style={{
+            marginTop: 15,
+            padding: "10px 20px",
+            borderRadius: 10,
+            border: "none",
+            background: "white",
+            color: "black",
+            fontWeight: 500,
+          }}
+        >
+          Unlock
+        </button>
+      </div>
     </div>
   );
 }
