@@ -10,6 +10,8 @@ import {
   onSnapshot,
   query,
   orderBy,
+  deleteDoc,
+  doc,
 } from "firebase/firestore";
 
 import { subscribeToForegroundMessages } from "@/lib/firebase-messaging";
@@ -19,6 +21,10 @@ export default function Memories() {
   const [photos, setPhotos] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
   const [notification, setNotification] = useState(null);
+
+  // 🗑️ delete state
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const longPressTimer = useRef(null);
 
   const latestCreatedAtRef = useRef(null);
 
@@ -45,7 +51,10 @@ export default function Memories() {
     const q = query(collection(db, "memories"), orderBy("createdAt", "desc"));
 
     const unsub = onSnapshot(q, (snap) => {
-      const data = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      const data = snap.docs.map((d) => ({
+        id: d.id,
+        ...d.data(),
+      }));
 
       const newest = data[0]?.createdAt;
 
@@ -89,6 +98,25 @@ export default function Memories() {
     });
   };
 
+  // 🗑️ delete logic
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+
+    await deleteDoc(doc(db, "memories", deleteTarget.id));
+    setDeleteTarget(null);
+  };
+
+  // 🖐️ long press handlers
+  const handlePressStart = (item) => {
+    longPressTimer.current = setTimeout(() => {
+      setDeleteTarget(item);
+    }, 600);
+  };
+
+  const handlePressEnd = () => {
+    clearTimeout(longPressTimer.current);
+  };
+
   return (
     <div
       style={{
@@ -112,7 +140,6 @@ export default function Memories() {
             left: "50%",
             transform: "translateX(-50%)",
             background: "rgba(255,77,109,0.9)",
-            backdropFilter: "blur(10px)",
             padding: "10px 16px",
             borderRadius: 999,
             zIndex: 9999,
@@ -169,12 +196,15 @@ export default function Memories() {
             "repeat(auto-fill, minmax(140px, 1fr))",
           gap: 10,
           paddingBottom: 120,
-          WebkitOverflowScrolling: "touch",
         }}
       >
         {photos.map((p) => (
           <div
             key={p.id}
+            onMouseDown={() => handlePressStart(p)}
+            onMouseUp={handlePressEnd}
+            onTouchStart={() => handlePressStart(p)}
+            onTouchEnd={handlePressEnd}
             onClick={() => setSelectedImage(p.image)}
             style={{
               borderRadius: 16,
@@ -223,7 +253,7 @@ export default function Memories() {
         />
       </label>
 
-      {/* FULLSCREEN */}
+      {/* FULLSCREEN VIEW */}
       {selectedImage && (
         <div
           onClick={() => setSelectedImage(null)}
@@ -245,6 +275,76 @@ export default function Memories() {
               borderRadius: 16,
             }}
           />
+        </div>
+      )}
+
+      {/* 🗑️ DELETE CONFIRM MODAL */}
+      {deleteTarget && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.85)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 10000,
+          }}
+        >
+          <div
+            style={{
+              background: "#1a1a1a",
+              padding: 20,
+              borderRadius: 16,
+              width: 280,
+              textAlign: "center",
+            }}
+          >
+            <div style={{ marginBottom: 12 }}>
+              Delete this memory?
+            </div>
+
+            <img
+              src={deleteTarget.image}
+              style={{
+                width: "100%",
+                height: 140,
+                objectFit: "cover",
+                borderRadius: 12,
+                marginBottom: 15,
+              }}
+            />
+
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                onClick={() => setDeleteTarget(null)}
+                style={{
+                  flex: 1,
+                  padding: 10,
+                  borderRadius: 10,
+                  border: "none",
+                  background: "#333",
+                  color: "white",
+                }}
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={confirmDelete}
+                style={{
+                  flex: 1,
+                  padding: 10,
+                  borderRadius: 10,
+                  border: "none",
+                  background: "red",
+                  color: "white",
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
