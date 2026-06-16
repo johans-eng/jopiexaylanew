@@ -1,56 +1,110 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { motion, useAnimation } from "framer-motion";
 
 export default function Home() {
   const router = useRouter();
-  const startX = useRef(null);
+  const controls = useAnimation();
+  const startY = useRef(null);
 
-  const handleTouchStart = (e) => {
-    startX.current = e.touches[0].clientX;
+  const [time, setTime] = useState("");
+
+  // live clock
+  useEffect(() => {
+    const update = () => {
+      const now = new Date();
+      const h = now.getHours().toString().padStart(2, "0");
+      const m = now.getMinutes().toString().padStart(2, "0");
+      setTime(`${h}:${m}`);
+    };
+
+    update();
+    const interval = setInterval(update, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleStart = (e) => {
+    startY.current = e.touches[0].clientY;
   };
 
-  const handleTouchEnd = (e) => {
-    if (startX.current === null) return;
+  const handleEnd = async (e) => {
+    if (startY.current === null) return;
 
-    const endX = e.changedTouches[0].clientX;
-    const diff = endX - startX.current;
+    const endY = e.changedTouches[0].clientY;
+    const diff = startY.current - endY;
 
-    // swipe right
+    // swipe UP (iPhone unlock style)
     if (diff > 80) {
+      await controls.start({
+        y: "-100%",
+        opacity: 0,
+        transition: { duration: 0.5 },
+      });
+
       router.push("/password");
     }
 
-    startX.current = null;
+    startY.current = null;
   };
 
   return (
-    <div
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
+    <motion.div
+      animate={controls}
+      onTouchStart={handleStart}
+      onTouchEnd={handleEnd}
       style={{
-        height: "100vh",
-        width: "100vw",
+        position: "fixed",
+        inset: 0,
         backgroundImage: "url('/home-bg.png')",
         backgroundSize: "cover",
         backgroundPosition: "center",
-        position: "relative",
+        overflow: "hidden",
       }}
     >
+      {/* blur overlay like iPhone */}
       <div
         style={{
           position: "absolute",
-          bottom: 60,
-          width: "100%",
-          textAlign: "center",
+          inset: 0,
+          backdropFilter: "blur(18px)",
+          backgroundColor: "rgba(0,0,0,0.25)",
+        }}
+      />
+
+      {/* clock */}
+      <div
+        style={{
+          position: "relative",
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
           color: "white",
-          fontSize: 18,
-          opacity: 0.8,
+          textAlign: "center",
         }}
       >
-        Swipe right →
+        <div style={{ fontSize: 80, fontWeight: "300" }}>{time}</div>
+
+        <div style={{ fontSize: 16, opacity: 0.8, marginTop: 10 }}>
+          Swipe up to unlock
+        </div>
+
+        {/* little swipe indicator */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: 40,
+            width: 60,
+            height: 5,
+            borderRadius: 10,
+            background: "white",
+            opacity: 0.5,
+          }}
+        />
       </div>
-    </div>
+    </motion.div>
   );
 }
